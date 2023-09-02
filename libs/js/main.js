@@ -1,22 +1,20 @@
-
 // SET GLOBAL VARIABLES START
-    var geoselection;
-//let borders;
-let countries;
+var geoselection;
 let cityData; // Declare a variable to store the city data
 let airportData; // Declare a variable to store the airports data
 let universityData; // Declare a variable to store the university data
 let refugeeData; // Declare a variable to store the refugee camp data
 let markers = []; // Array to store markers
-let selectedAlphaTwo;
 let selectedLatitude;
 let selectedLongitude;
 let selectedCountry;
 let selectedOption;
+var selectedOption3;
 
-var latx, lngx;
+var airportLayer,cityLayer,universityLayer,refugeeLayer;
 // SET GLOBAL VARIABLES END
 
+// ******************************** MAP GENERAL CONFIGURATION STARTS ************************************
 //Initialize Map
 var streets = L.tileLayer(
     "https://tile.jawg.io/jawg-streets/{z}/{x}/{y}{r}.png?access-token=RO09eeNd1jxvwuN30AhMZMAeI0A0BH6c69iQefGH3fDgwzbEhjg0eFTDFKQfdG4O", {
@@ -38,7 +36,21 @@ var map = L.map("map", {
     layers: [streets],
 });
 
-var layerControl = L.control.layers(basemaps).addTo(map);
+
+cityLayer = L.markerClusterGroup();
+airportLayer = L.markerClusterGroup();
+universityLayer = L.markerClusterGroup();
+refugeeLayer = L.markerClusterGroup();
+
+var overlayMaps = {
+        Airports: airportLayer,
+        Cities: cityLayer,
+        Universities: universityLayer,
+        RefugeeCamp: refugeeLayer
+    };
+    
+
+var layerControl = L.control.layers(basemaps,overlayMaps).addTo(map);
 
 var myStyle = {
     color: "#ff7800",
@@ -50,30 +62,42 @@ function getMap(lat, lng) {
     map.setView([lat, lng]);
 }
 
+// ******************************** MAP GENERAL CONFIGURATION ENDS ************************************
 
-    const countrySelect = document.getElementById("countrySelect");
-    var loadingIndicator = document.getElementById("loadingIndicator");
+
+
+//Select Function to load all
+const countrySelect = document.getElementById("countrySelect");
+var loadingIndicator = document.getElementById("loadingIndicator");
 countrySelect.addEventListener("change", function() {
-    loadingIndicator.style.display = "block"; // Show loading indicator
+loadingIndicator.style.display = "block"; // Show loading indicator
     selectedOption = countrySelect.value;
     selectedCountry = countrySelect.options[countrySelect.selectedIndex].text;
     console.log("Selected Country Text:", selectedCountry);
     console.log("Selected Country Value:", selectedOption);
 
-    if (geoselection) {
-        geoselection.remove();
-    }
+    //Remove Borders and Markers on Select
+    geoselection.remove();
     removeMarkers();
+    removeMarkerCity();
+    removeMarkerAirport();
+    removeMarkerUniversity();
+    removeMarkerRefugee();
+        
+    //Get Borders on Select
     getCountryBorders(selectedOption);
-
-    //MARKERS
+    getCountryCurrency(selectedOption3);
+    //Load Markers on Select
     getCountryCities(selectedOption);
     getCountryAirports(selectedOption);
     getCountryUniversities(selectedOption);
     getCountryRefugeeC(selectedOption);
+   
 });
 
 
+// ******************************** COUNTRY LIST AND BORDERS START ************************************
+//Populate from Function
 function populateCountrySelect(data) {
     for (const entry of data) {
         const option = document.createElement("option");
@@ -82,7 +106,6 @@ function populateCountrySelect(data) {
         countrySelect.appendChild(option);
     }
 }
-
 
 const xhrNew = new XMLHttpRequest();
 xhrNew.onreadystatechange = function() {
@@ -102,7 +125,7 @@ xhrNew.open("GET", "libs/api/getRESTCountryInfo.php", true);
 xhrNew.send();
 
 
-
+//Update Country Function
 function updateSelectedCountry() {
     navigator.geolocation.getCurrentPosition(function(position) {
         const latitude = position.coords.latitude;
@@ -134,13 +157,13 @@ function updateSelectedCountry() {
                         defaultOption.value = currentData.countryCode;
                         selectedOption = defaultOption.value;
                         selectedCountry = defaultOption.textContent;
-                        //console.log(selectedOption);
                         getCountryBorders(selectedOption);
                         //MARKERS
                         getCountryCities(selectedOption);
                         getCountryAirports(selectedOption);
                         getCountryUniversities(selectedOption);
                         getCountryRefugeeC(selectedOption);
+                        //getCountryCurrency("NGN");
                     } else {
                         console.log(
                             "No information available for the specified country."
@@ -157,9 +180,8 @@ function updateSelectedCountry() {
     });
 }
 
-
-
-
+ 
+//Borders Function
 function getCountryBorders(country) {
     var xhr = new XMLHttpRequest();
     var url = "libs/api/getCoordinates.php";
@@ -173,7 +195,8 @@ function getCountryBorders(country) {
 				loadingIndicator.style.display = "block"; // Show loading indicator
                 var result = JSON.parse(xhr.responseText);
                 if (result.data.name === "ok") {
-                    var coordinateData = result.data.api1_data[0].geometry; // Store the city data
+                    selectedOption3 = result.data.api1_data[0].iso_a3;
+                    var coordinateData = result.data.api1_data[0].geometry;
                     selectedLatitude = result.data.api2_data.lat;
                     selectedLongitude = result.data.api2_data.lon;
                     geoselection = L.geoJSON([coordinateData], {
@@ -191,8 +214,7 @@ function getCountryBorders(country) {
 
     xhr.send();
 }
-
-
+// ******************************** COUNTRY LIST AND BORDERS END ************************************
 
 
 // ******************************** GET MODAL INFORMATION FUNCTIONS START ************************************
@@ -346,8 +368,8 @@ function getCountryWeather(lat, lng) {
                 // Check if the response contains data
                 if (response && response.data) {
                     var weatherInfo = response.data.daily;
-                    document.getElementById("weatherTitle").innerHTML =
-                        "Weather Information";
+                    document.getElementById("weatherTitle").innerHTML = selectedCountry +
+                        " | Weather Information";
                     // Loop through the daily weather data and create a table
                     var tableHtml =
                         "<table class='table table-striped' ><thead><tr><th>Date</th><th>Min </th><th>Max</th><th> </th></tr></thead><tbody>";
@@ -373,11 +395,11 @@ function getCountryWeather(lat, lng) {
                         tableHtml +=
                             "<td>" +
                             Math.round(kelvinToCelsius(dailyWeather.temp.min)) +
-                            " °C</td>";
+                            " 째C</td>";
                         tableHtml +=
                             "<td>" +
                             Math.round(kelvinToCelsius(dailyWeather.temp.max)) +
-                            " °C</td>";
+                            " 째C</td>";
                         tableHtml +=
                             '<td><img src="http://openweathermap.org/img/w/' +
                             dailyWeather.weather[0].icon +
@@ -431,7 +453,8 @@ function getCountryNews(country) {
 				loadingIndicator.style.display = "block"; // Show loading indicator
                 // Parse the JSON response
                 var response = JSON.parse(xhr.responseText);
-
+                document.getElementById("newsTitle").innerHTML = selectedCountry +
+                        " | Top News";
                 // Check if the response contains data
                 if (response && response.data) {
                     var newsInfo = response.data.articles;
@@ -508,7 +531,8 @@ function getCountryWiki(country) {
                     response.data.geonames.length > 0
                 ) {
                     var wikiInfo = response.data.geonames;
-
+                    document.getElementById("wikiTitle").innerHTML = selectedCountry +
+                        " | Wikipedia";
                     // Loop through the news articles and create a table
                     var tableHtml = "<table><tbody>";
 
@@ -544,6 +568,71 @@ function getCountryWiki(country) {
     xhr.send();
 }
 
+
+function getCountryCurrency(country) {
+    var apiUrl = "libs/api/getExchangeRate.php";
+
+    // Create a new XMLHttpRequest object
+    var xhr = new XMLHttpRequest();
+
+    var url = apiUrl + "?country=" + encodeURIComponent(country);
+
+    // Configure the AJAX request
+    xhr.open("GET", url, true);
+
+    // Set up a callback function to handle the response
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                loadingIndicator.style.display = "block"; // Show loading indicator
+                // Parse the JSON response
+                var response = JSON.parse(xhr.responseText);
+                document.getElementById("curTitle").innerHTML = selectedCountry +
+                        " | Currency Exchange";
+                // Check if the response contains data
+                if (response && response.data && response.data.rates) {
+                    var currencyInfo = response.data.rates;
+                    
+                    // Create an empty string to store the HTML content
+                      var listHtml = "<ul class='list-group w-60 mx-auto'>";
+                    // Add the base currency at the top
+                    listHtml += "<li class='list-group-item d-flex justify-content-between bg-success text-white'><strong>BASE CURRENCY: " + response.data.base + 
+                    " <span class='text-right pr-2'>"  + "</span></strong></li><br><br>";
+                    
+                    listHtml += "<li class='list-group-item d-flex text-center bg-danger text-white'><strong>RATES</strong></li>";
+                    
+                    // Loop through the rates object to get currency name and value
+                    for (var currencyName in currencyInfo) {
+                        if (currencyInfo.hasOwnProperty(currencyName)) {
+                            var currencyValue = currencyInfo[currencyName];
+                            // Create a list item for each currency
+                            listHtml += "<li class='list-group-item d-flex justify-content-between'>" + currencyName + " <span class='text-right pr-2'>" + currencyValue.toFixed(2) + "</span></li>";
+                        }
+                    }
+
+                    listHtml += "</ul>";
+
+                    // Insert the table into the designated HTML element
+                    var listContainer = document.getElementById("listCurrency");
+                    listContainer.innerHTML = listHtml;
+                } else {
+                    console.log("No currency available for the specified country.");
+                }
+            } else {
+                console.log("Error fetching data. Status code:", xhr.status);
+            }
+        }
+    };
+
+    // Send the AJAX request
+    xhr.send();
+}
+
+
+
+
+
+
 // ************************************** GET MODAL INFORMATION FUNCTIONS END *******************************************
 
 
@@ -575,6 +664,7 @@ function getCountryCities(country) {
                 var result = JSON.parse(xhr.responseText);
                 if (result.status.name === "ok") {
                     cityData = result.data.geonames; // Store the city data
+                     addMarkersToClusterCity(cityData);
                 }
             } else {
                 console.log(JSON.stringify(xhr));
@@ -602,6 +692,7 @@ function getCountryAirports(country) {
                 var result = JSON.parse(xhr.responseText);
                 if (result.status.name === "ok") {
                     airportData = result.data.geonames; // Store the city data
+                    addMarkersToClusterAirport(airportData);
                 }
             } else {
                 console.log(JSON.stringify(xhr));
@@ -629,6 +720,7 @@ function getCountryUniversities(country) {
                 var result = JSON.parse(xhr.responseText);
                 if (result.status.name === "ok") {
                     universityData = result.data.geonames; // Store the city data
+                    addMarkersToClusterUniversity(universityData);
                 }
             } else {
                 console.log(JSON.stringify(xhr));
@@ -657,6 +749,7 @@ function getCountryRefugeeC(country) {
                 var result = JSON.parse(xhr.responseText);
                 if (result.status.name === "ok") {
                     refugeeData = result.data.geonames; // Store the city data
+                    addMarkersToClusterRefugee(refugeeData);
                 }
             } else {
                 console.log(JSON.stringify(xhr));
@@ -670,7 +763,7 @@ function getCountryRefugeeC(country) {
 }
 
 
-// ************************************** MAP MARKERS FUNCTIONS END *************************************************
+// ************************************** MAP MARKERS FUNCTIONS END **********************************************
 
 
 
@@ -745,7 +838,7 @@ L.easyButton({
 
 L.easyButton({
     position: "topleft",
-    id: "weatherBtn",
+    id: "railway-view-button",
     states: [{
         icon: "fa-solid fa-newspaper",
         stateName: "unchecked",
@@ -762,165 +855,272 @@ L.easyButton({
 }).addTo(map);
 
 
-// Show Cities Button
+//Show Wikipedia Button
 
 L.easyButton({
-    position: "topright",
-    id: "weatherBtn",
+    position: "topleft",
+    id: "wikiBtn",
     states: [{
-        icon: "fa-solid fa-city",
+        icon: "fab fa-wikipedia-w",
         stateName: "unchecked",
-        title: "Show Cities",
+        title: "Show Country Wikipedia",
         onClick: function(btn, map) {
-            removeMarkers();
-            var cityIcon = L.icon({
-                iconUrl: "libs/images/icons/city.png",
-                iconSize: [32, 32], // Adjust the icon size as needed
-                iconAnchor: [16, 32], // Adjust the icon anchor point
-                popupAnchor: [0, 0], // Adjust the popup anchor point
+            getCountryWiki(selectedCountry);
+            $("#showWikipedia").modal("show");
+
+            $(".close").click(function() {
+                $("#showWikipedia").modal("hide");
             });
-
-            if (cityData) {
-                for (var i = 0; i < cityData.length; i++) {
-                    var city = cityData[i];
-                    var lat = parseFloat(city.lat);
-                    var lng = parseFloat(city.lng);
-                    var population = city.population;
-                    var cityName = city.name;
-
-                    // Create a marker for each city
-                    var marker = L.marker([lat, lng], {
-                        icon: cityIcon,
-                    }).addTo(map);
-                    marker.bindPopup(
-                        cityName + "<br>Population: " + population
-                    );
-
-                    markers.push(marker); // Add the marker to the markers array
-                }
-            }
         },
     }, ],
 }).addTo(map);
 
 
-// Show Airports Button
 
+//Show Location Button
 
 L.easyButton({
     position: "topright",
-    id: "weatherBtn",
+    id: "locationBtn",
     states: [{
-        icon: "fa-solid fa-plane-departure",
+        icon: "fa-location-arrow",
         stateName: "unchecked",
-        title: "Show Airports",
+        title: "Get Current Location",
         onClick: function(btn, map) {
-            removeMarkers();
-            var cityIcon = L.icon({
-                iconUrl: "libs/images/icons/airport.png",
-                iconSize: [32, 32], // Adjust the icon size as needed
-                iconAnchor: [16, 32], // Adjust the icon anchor point
-                popupAnchor: [0, 0], // Adjust the popup anchor point
-            });
+        window.location = window.location;
+        },
+    }, ],
+}).addTo(map);
 
-            if (airportData) {
-                for (var i = 0; i < airportData.length; i++) {
-                    var airport = airportData[i];
+
+
+//Show Currency Button
+
+L.easyButton({
+    position: "topleft",
+    id: "currencyBtn",
+    states: [{
+        icon: "fa fa-gbp",
+        stateName: "unchecked",
+        title: "Get Currency Information",
+        onClick: function(btn, map) {
+            getCountryCurrency(selectedOption3);
+            $("#currencyInformation").modal("show");
+
+            $(".close").click(function() {
+                $("#currencyInformation").modal("hide");
+            });
+        },
+    }, ],
+}).addTo(map);
+
+
+// ******************************************* MAP BUTTONS END *************************************************
+
+
+
+// ******************************************* MAP MARKERS END *************************************************
+// City Markers with Cluster Group
+var markers_city = L.markerClusterGroup();
+// Function to add markers to the cluster group
+function addMarkersToClusterCity(cityData) {
+    var cityIcon = L.icon({
+        iconUrl: "libs/images/icons/city.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+    });
+
+    if (cityData) {
+        // Loop through city data and create markers
+        for (var i = 0; i < cityData.length; i++) {
+            var city = cityData[i];
+            var lat = parseFloat(city.lat);
+            var lng = parseFloat(city.lng);
+            var population = city.population.toLocaleString();
+            var cityName = city.name;
+            // Create a marker for each city
+            var marker = L.marker([lat, lng], {
+                icon: cityIcon,
+            });
+            marker.bindPopup(
+                cityName + "<br>Population: " + population
+            );
+            markers_city.addLayer(marker);
+        }
+        // Add the marker cluster group to the map
+        map.addLayer(markers_city);
+        // Initially, display the marker cluster group on the map
+        map.fitBounds(markers_city.getBounds());
+    }
+}
+// Add an 'add' event listener to the cityLayer
+cityLayer.on('add', function() {
+    // The code to run when the "Cities" layer is added to the map
+    addMarkersToClusterCity(cityData);
+});
+// Function to remove markers from the cluster group
+function removeMarkerCity() {
+    markers_city.clearLayers();
+}
+// Add a 'remove' event listener to the cityLayer
+cityLayer.on('remove', function() {
+    // The code to run when the "Cities" layer is removed from the map
+    removeMarkerCity();
+});
+
+
+
+// Airport Markers with Cluster Group
+var markers_airport = L.markerClusterGroup();
+// Function to add markers to the cluster group
+function addMarkersToClusterAirport(airportData) {
+    var airportIcon = L.icon({
+        iconUrl: "libs/images/icons/airport.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+    });
+    
+
+            
+    if (airportData) {
+        // Loop through city data and create markers
+        for (var i = 0; i < airportData.length; i++) {
+            var airport = airportData[i];
                     var lat = parseFloat(airport.lat);
                     var lng = parseFloat(airport.lng);
                     var aiportName = airport.name;
-
-                    // Create a marker for each
-                    var marker = L.marker([lat, lng], {
-                        icon: cityIcon,
-                    }).addTo(map);
-                    marker.bindPopup(aiportName);
-
-                    markers.push(marker); // Add the marker to the markers array
-                }
-            }
-        },
-    }, ],
-}).addTo(map);
-
-
-// Show Universities Button
-
-
-L.easyButton({
-    position: "topright",
-    id: "weatherBtn",
-    states: [{
-        icon: "fa-solid fa-building-columns",
-        stateName: "unchecked",
-        title: "Show Universities",
-        onClick: function(btn, map) {
-            removeMarkers();
-            var cityIcon = L.icon({
-                iconUrl: "libs/images/icons/university.png",
-                iconSize: [43, 43], // Adjust the icon size as needed
-                iconAnchor: [16, 32], // Adjust the icon anchor point
-                popupAnchor: [0, 0], // Adjust the popup anchor point
+                    
+            // Create a marker for each city
+            var marker = L.marker([lat, lng], {
+                icon: airportIcon,
             });
+            marker.bindPopup(aiportName);
+            markers_airport.addLayer(marker);
+        }
+        // Add the marker cluster group to the map
+        map.addLayer(markers_airport);
+        // Initially, display the marker cluster group on the map
+        map.fitBounds(markers_airport.getBounds());
+    }
+}
+// Add an 'add' event listener to the cityLayer
+airportLayer.on('add', function() {
+    // The code to run when the "Cities" layer is added to the map
+    addMarkersToClusterAirport(airportData);
+});
+// Function to remove markers from the cluster group
+function removeMarkerAirport() {
+    markers_airport.clearLayers();
+}
+// Add a 'remove' event listener to the cityLayer
+airportLayer.on('remove', function() {
+    // The code to run when the "Cities" layer is removed from the map
+    removeMarkerAirport();
+});
 
-            if (universityData) {
-                for (var i = 0; i < universityData.length; i++) {
-                    var university = universityData[i];
+
+
+
+// University Markers with Cluster Group
+var markers_university = L.markerClusterGroup();
+// Function to add markers to the cluster group
+function addMarkersToClusterUniversity(universityData) {
+    var universityIcon = L.icon({
+        iconUrl: "libs/images/icons/university.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+    });
+    
+
+    if (universityData) {
+        // Loop through city data and create markers
+        for (var i = 0; i < universityData.length; i++) {
+            var university = universityData[i];
                     var lat = parseFloat(university.lat);
                     var lng = parseFloat(university.lng);
                     var universityName = university.name;
-
-                    // Create a marker for each
-                    var marker = L.marker([lat, lng], {
-                        icon: cityIcon,
-                    }).addTo(map);
-                    marker.bindPopup(universityName);
-
-                    markers.push(marker); // Add the marker to the markers array
-                }
-            }
-        },
-    }, ],
-}).addTo(map);
-
-
-// Show Refugee Camps Button
-
-
-L.easyButton({
-    position: "topright",
-    id: "weatherBtn",
-    states: [{
-        icon: "fa-solid fa-hand-holding-heart",
-        stateName: "unchecked",
-        title: "Show Refugee Camps",
-        onClick: function(btn, map) {
-            removeMarkers();
-            var cityIcon = L.icon({
-                iconUrl: "libs/images/icons/charity.png",
-                iconSize: [64, 64], // Adjust the icon size as needed
-                iconAnchor: [16, 32], // Adjust the icon anchor point
-                popupAnchor: [0, 0], // Adjust the popup anchor point
+                    
+            // Create a marker for each city
+            var marker = L.marker([lat, lng], {
+                        icon: universityIcon,
             });
+            marker.bindPopup(universityName);
+            markers_university.addLayer(marker);
+        }
+        // Add the marker cluster group to the map
+        map.addLayer(markers_university);
+        // Initially, display the marker cluster group on the map
+        map.fitBounds(markers_university.getBounds());
+    }
+}
+// Add an 'add' event listener to the cityLayer
+universityLayer.on('add', function() {
+    // The code to run when the "Cities" layer is added to the map
+    addMarkersToClusterUniversity(universityData);
+});
+// Function to remove markers from the cluster group
+function removeMarkerUniversity() {
+    markers_university.clearLayers();
+}
+// Add a 'remove' event listener to the cityLayer
+universityLayer.on('remove', function() {
+    // The code to run when the "Cities" layer is removed from the map
+    removeMarkerUniversity();
+});
 
-            if (refugeeData) {
-                for (var i = 0; i < refugeeData.length; i++) {
-                    var refugee = refugeeData[i];
+
+
+
+// Refugee Camp Markers with Cluster Group
+var markers_refugee = L.markerClusterGroup();
+// Function to add markers to the cluster group
+function addMarkersToClusterRefugee(refugeeData) {
+    var refugeeIcon = L.icon({
+        iconUrl: "libs/images/icons/charity.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+    });
+    
+
+    if (refugeeData) {
+        // Loop through city data and create markers
+        for (var i = 0; i < refugeeData.length; i++) {
+             var refugee = refugeeData[i];
                     var lat = parseFloat(refugee.lat);
                     var lng = parseFloat(refugee.lng);
                     var refugeeName = refugee.name;
+                    
+            // Create a marker for each city
+            var marker = L.marker([lat, lng], {
+                        icon: refugeeIcon,
+            });
+            marker.bindPopup(refugeeName);
+            markers_refugee.addLayer(marker);
+        }
+        // Add the marker cluster group to the map
+        map.addLayer(markers_refugee);
+        // Initially, display the marker cluster group on the map
+        map.fitBounds(markers_refugee.getBounds());
+    }
+}
+// Add an 'add' event listener to the cityLayer
+refugeeLayer.on('add', function() {
+    // The code to run when the "Cities" layer is added to the map
+    addMarkersToClusterRefugee(refugeeData);
+});
+// Function to remove markers from the cluster group
+function removeMarkerRefugee() {
+    markers_refugee.clearLayers();
+}
+// Add a 'remove' event listener to the cityLayer
+refugeeLayer.on('remove', function() {
+    // The code to run when the "" layer is removed from the map
+    removeMarkerRefugee();
+});
 
-                    // Create a marker for each
-                    var marker = L.marker([lat, lng], {
-                        icon: cityIcon,
-                    }).addTo(map);
-                    marker.bindPopup(refugeeName);
 
-                    markers.push(marker); // Add the marker to the markers array
-                }
-            }
-        },
-    }, ],
-}).addTo(map);
-
-// ******************************************* MAP BUTTONS END *************************************************
+// ******************************************* MAP MARKERS END *************************************************

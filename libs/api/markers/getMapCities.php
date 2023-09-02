@@ -4,7 +4,7 @@
 
 	$executionStartTime = microtime(true);
 	$apiKey = ""; // Put API key
-	$url='http://api.geonames.org/searchJSON?country=' . $_REQUEST['country'] . '&featureCode=PPLA&featureCode=PPLA2&maxRows=25&username=' . $apiKey;
+	$url='http://api.geonames.org/searchJSON?country=' . $_REQUEST['country'] . '&featureCode=PPLA&featureCode=PPLA2&maxRows=45&username=' . $apiKey;
 
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

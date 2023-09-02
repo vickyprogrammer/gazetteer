@@ -4,8 +4,9 @@
 	error_reporting(E_ALL);
 
 	$executionStartTime = microtime(true);
-	$apiKey = ""; // Put API key
-	$url='http://api.geonames.org/searchJSON?country=' . $_REQUEST['country'] . '&featureCode=CMPRF&maxRows=45&username=' . $apiKey;
+    $apiKey = "";
+    $reqcurrency = $_GET['country'];
+	$url='https://openexchangerates.org/api/latest.json?app_id=' . $apiKey. '&symbols=' . $reqcurrency . ',GBP,EUR,AED,CAD,JPY';
 
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,65 +14,36 @@
 		<link rel="icon" type="image/png" href="libs/images/icons/favicon.png"/>
 	
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-extra-markers/1.2.1/css/leaflet.extra-markers.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-extra-markers/1.2.1/css/leaflet.extra-markers.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.js" integrity="sha512-nMxgrgYu7vo/LNe5NFHZOIkwbodaU13UdYiDoDCuo3P2sryEyffrk1R3c2tFGbZ83AqaMbO19yhKnVgHztuqAw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-  <style>
-#map {
-  width: 100%;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  background-color: #80d8ff;
-}
-
-#loadingIndicator {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 10px;
-    border-radius: 5px;
-}
-
-#loadingIndicator img {
-    display: block;
-    margin: 0 auto;
-}
-  </style>
-
+    <link href="libs/css/style.css" rel="stylesheet" />
 
 </head>
 <body>
 
-<nav class="navbar navbar-dark bg-dark sticky-top">
-    <a class="navbar-brand px-4">Gazetteer</a>
-    <div class="form-inline px-4">
+
+	  
+
+<div id="map">
+  <nav class="navbar sticky-top justify-content-center">
+    <div class="form-inline center-select">
       <select id="countrySelect" class="form-control mr-sm-2">
         <option value="" disabled selected>Select a country</option>
       </select>
     </div>
   </nav>
-	  
-   
+</div>
 
-<center>
-<span id="selectContainer">
-  
-</span></center>
-
-<div id="map"></div>
 
 <!-- COUNTRY INFORMATION MODAL  STARTS -->
 <div id="countryInformation" class="modal" data-bs-backdrop="false" tabindex="-1">
@@ -303,7 +275,7 @@
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content shadow">
       <div class="modal-header bg-dark bg-gradient text-white">
-        <center><h5 style="text-align:center;" class="modal-title">Top News</h5></center>
+        <center><h5 style="text-align:center;" class="modal-title" id="newsTitle"></h5></center>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -318,11 +290,11 @@
 <!-- NEWS INFORMATION MODAL ENDS -->
 
 <!-- WIKI MODAL  STARTS -->
-<div id="wikiModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+<div id="showWikipedia" class="modal" data-bs-backdrop="false" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content shadow">
       <div class="modal-header bg-dark bg-gradient text-white">
-        <center><h5 style="text-align:center;" class="modal-title">Wiki</h5></center>
+        <center><h5 style="text-align:center;" class="modal-title" id="wikiTitle"></h5></center>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -337,6 +309,25 @@
 <!-- WIKI MODAL ENDS -->
 
 
+<!--  CURRENCY MODAL  STARTS -->
+<div id="currencyInformation" class="modal" data-bs-backdrop="false" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow">
+      <div class="modal-header bg-dark bg-gradient text-white">
+        <center><h5 style="text-align:center;" class="modal-title" id="curTitle"></h5></center>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+          <div class="modal-body">
+             <div id="listCurrency"></div> 
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
+          </div>
+    </div>
+  </div>
+</div>
+<!--  CURRENCY MODAL ENDS -->
+
 
 <div id="loadingIndicator" style="display: none;">
     <img src="libs/images/loading.gif" height="70px" width="70px" alt="Loading..." />
@@ -346,6 +337,7 @@
 </html>
 
 		
+			
 <!-- Javascript Library-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.2/jquery.min.js"></script>
 

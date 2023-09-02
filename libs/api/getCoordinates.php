@@ -24,11 +24,13 @@ if ($data1 && isset($data1['features'])) {
     foreach ($data1['features'] as $feature) {
         if (isset($feature['properties']['iso_a2']) && isset($feature['geometry'])) {
             $iso_a2 = $feature['properties']['iso_a2'];
+            $iso_a3 = $feature['properties']['iso_a3'];
             $geometry = $feature['geometry'];
 
             if ($iso_a2 === $filterIsoA2 || $filterIsoA2 === '') {
                 $filteredOutput[] = [
-                    'geometry' => $geometry
+                    'geometry' => $geometry,
+                    'iso_a3' => $iso_a3
                 ];
             }
         }

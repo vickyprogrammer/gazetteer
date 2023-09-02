@@ -4,8 +4,8 @@
 	error_reporting(E_ALL);
 
 	$executionStartTime = microtime(true);
-	$apiKey = ""; // Put API key
-	$url='http://api.geonames.org/wikipediaSearchJSON?q=' . $_REQUEST['country'] . '&maxRows=5&username=' . $apiKey;
+	$apiKey = ""; //Put Api Keys
+	$url='http://api.geonames.org/wikipediaSearchJSON?q=' . urlencode($_REQUEST['country']) . '&maxRows=5&username=' . $apiKey;
 
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
