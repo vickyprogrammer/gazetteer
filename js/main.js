@@ -100,7 +100,7 @@ xhrNew.onreadystatechange = function() {
     }
 };
 
-xhrNew.open("GET", "libs/api/getRESTCountryInfo.php", true);
+xhrNew.open("GET", "api/getRESTCountryInfo.php", true);
 xhrNew.send();
 
 
@@ -113,7 +113,7 @@ function updateSelectedCountry() {
         const latitude = position.coords.latitude;
         const longitude = position.coords.longitude;
 
-        var apiUrl = 'libs/api/getCurrentCountry.php?lat=' + latitude + '&lng=' + longitude;
+        var apiUrl = 'api/getCurrentCountry.php?lat=' + latitude + '&lng=' + longitude;
         var xhr = new XMLHttpRequest();
 
         // Configure the AJAX request
@@ -179,7 +179,7 @@ function updateSelectedCountry() {
 //Borders Function
 function getCountryBorders(country) {
     var xhr = new XMLHttpRequest();
-    var url = "libs/api/getCoordinates.php";
+    var url = "api/getCoordinates.php";
     var params = "country=" + country;
     xhr.open("GET", url + "?" + params, true);
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -218,7 +218,7 @@ function getCountryBorders(country) {
 //Get Country Information Modal
 var currencyfetch;
 function getCountryInfo(country) {
-    var apiUrl = "libs/api/getCountryInfo.php";
+    var apiUrl = "api/getCountryInfo.php";
 
     // Create a new XMLHttpRequest object
     var xhr = new XMLHttpRequest();
@@ -286,7 +286,7 @@ function formatNumberWithCommas(number) {
 //Get Timezone Information Modal
 
 function getCountryTimezone(lat, lng) {
-    var apiUrl = "libs/api/getTimezone.php";
+    var apiUrl = "api/getTimezone.php";
 
     // Create a new XMLHttpRequest object
     var xhr = new XMLHttpRequest();
@@ -344,7 +344,7 @@ function getCountryTimezone(lat, lng) {
 
 //Get Weather Information Modal
 function getCountryWeather(lat, lng) {
-    var apiUrl = "libs/api/getWeather.php";
+    var apiUrl = "api/getWeather.php";
 
     // Create a new XMLHttpRequest object
     var xhr = new XMLHttpRequest();
@@ -419,7 +419,7 @@ function getCountryWeather(lat, lng) {
 
 //Get Country News Modal
 function getCountryNews(country) {
-    var apiUrl = "libs/api/getNews.php";
+    var apiUrl = "api/getNews.php";
 
     // Create a new XMLHttpRequest object
     var xhr = new XMLHttpRequest();
@@ -447,7 +447,7 @@ function getCountryNews(country) {
                     for (var i = 0; i < newsInfo.length; i++) {
                         var newsArticle = newsInfo[i];
                        if(newsArticle.image_url===null){
-                          var imagesurl = "libs/images/noimage.jpeg";
+                          var imagesurl = "images/noimage.jpeg";
                        } else{
                           var imagesurlunclean = newsArticle.image_url;
                            imagesurl = imagesurlunclean.replace(/\/$/, '');
@@ -497,7 +497,7 @@ function formatDate(dateString) {
 
 //Get Wikipedia Information Modal
 function getCountryWiki(country) {
-    var apiUrl = "libs/api/getWiki.php";
+    var apiUrl = "api/getWiki.php";
 
     // Create a new XMLHttpRequest object
     var xhr = new XMLHttpRequest();
@@ -565,7 +565,7 @@ function getCountryWiki(country) {
 
 //Get Public Holiday Information Modal
 function getCountryHoliday(country) {
-    var apiUrl = "libs/api/getPublicHolidays.php";
+    var apiUrl = "api/getPublicHolidays.php";
 
     // Create a new XMLHttpRequest object
     var xhr = new XMLHttpRequest();
@@ -623,7 +623,7 @@ function getCountryHoliday(country) {
 // Function for Exchange Rates
 function getCountryCurrency(countrysel) {
     getCountryInfo(selectedOption);
-    var apiUrl = "libs/api/getExchangeRate.php";
+    var apiUrl = "api/getExchangeRate.php";
     var xhr = new XMLHttpRequest();
     var url = apiUrl + "?country=" + encodeURIComponent(countrysel);
     xhr.open("GET", url, true);
@@ -741,7 +741,7 @@ function calcResult() {
 //Get Map Markers for Cities
 function getCountryCities(country) {
     var xhr = new XMLHttpRequest();
-    var url = "libs/api/markers/getMapCities.php";
+    var url = "api/markers/getMapCities.php";
     var params = "country=" + country;
 
     xhr.open("GET", url + "?" + params, true);
@@ -769,7 +769,7 @@ function getCountryCities(country) {
 //Get Map Markers for Airports
 function getCountryAirports(country) {
     var xhr = new XMLHttpRequest();
-    var url = "libs/api/markers/getMapAirports.php";
+    var url = "api/markers/getMapAirports.php";
     var params = "country=" + country;
 
     xhr.open("GET", url + "?" + params, true);
@@ -797,7 +797,7 @@ function getCountryAirports(country) {
 //Get Map Markers for Universities
 function getCountryUniversities(country) {
     var xhr = new XMLHttpRequest();
-    var url = "libs/api/markers/getMapUniversities.php";
+    var url = "api/markers/getMapUniversities.php";
     var params = "country=" + country;
 
     xhr.open("GET", url + "?" + params, true);
@@ -826,7 +826,7 @@ function getCountryUniversities(country) {
 //Get Map Markers for Mountain
 function getCountryMountains(country) {
     var xhr = new XMLHttpRequest();
-    var url = "libs/api/markers/getMapMountains.php";
+    var url = "api/markers/getMapMountains.php";
     var params = "country=" + country;
 
     xhr.open("GET", url + "?" + params, true);
