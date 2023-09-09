@@ -1,7 +1,7 @@
 
 ## Screenshots
 
-![App Screenshot](https://www.victorsebiotimo.co.uk/libs/images/myproject.png)
+![App Screenshot](https://www.victorsebiotimo.co.uk/libs/images/myprojectnew.png)
 
 
 # Introducing Gazetteer: Mapping the World with Data

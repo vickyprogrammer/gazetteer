@@ -4,7 +4,7 @@
 	error_reporting(E_ALL);
 
 	$executionStartTime = microtime(true);
-	$apiKey = ""; // Put API key
+	$apiKey = "";
 	$url='http://api.geonames.org/searchJSON?country=' . $_REQUEST['country'] . '&featureCode=univ&maxRows=45&username=' . $apiKey;
 
 	$ch = curl_init();

@@ -1,357 +1,288 @@
-
 <!DOCTYPE html>
 <html lang="en">
-<head>
-	<meta charset="utf-8">
-
-		<title>Gazetteer</title>
-		<meta name="author" content="Victor Sebiotimo">
-		<meta name="description" content="Gazetteer Web Application">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-
-
-		<!-- Favicon -->
-		<link rel="icon" type="image/png" href="libs/images/icons/favicon.png"/>
-	
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-extra-markers/1.2.1/css/leaflet.extra-markers.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.js" integrity="sha512-nMxgrgYu7vo/LNe5NFHZOIkwbodaU13UdYiDoDCuo3P2sryEyffrk1R3c2tFGbZ83AqaMbO19yhKnVgHztuqAw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <link href="libs/css/style.css" rel="stylesheet" />
-
-</head>
-<body>
-
-
-	  
-
-<div id="map">
-  <nav class="navbar sticky-top justify-content-center">
-    <div class="form-inline center-select">
-      <select id="countrySelect" class="form-control mr-sm-2">
-        <option value="" disabled selected>Select a country</option>
-      </select>
-    </div>
-  </nav>
-</div>
-
-
-<!-- COUNTRY INFORMATION MODAL  STARTS -->
-<div id="countryInformation" class="modal" data-bs-backdrop="false" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content shadow">
-      <div class="modal-header bg-dark bg-gradient text-white">
-        <center><h5 style="text-align:center;" class="modal-title" id="countryName"></h5></center>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+   <head>
+      <meta charset="utf-8">
+      <title>Gazetteer</title>
+      <meta name="author" content="Victor Sebiotimo">
+      <meta name="description" content="Gazetteer Web Application">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+      <!-- Favicon -->
+      <link rel="icon" type="image/png" href="libs/images/icons/favicon.png"/>
+      <link rel="stylesheet" href="libs/leaflet-1.9.4/package/dist/leaflet.css">
+      <link rel="stylesheet" href="libs/leaflet.markercluster-1.5.3/package/dist/MarkerCluster.Default.css">
+      <link rel="stylesheet" href="libs/leaflet.markercluster-1.5.3/package/dist/MarkerCluster.css">
+      <link rel="stylesheet" href="libs/leaflet-extra-markers-1.2.2/package/dist/css/leaflet.extra-markers.min.css">
+      <link rel="stylesheet" href="libs/font-awesome/package/css/all.min.css">
+      <link rel="stylesheet" href="libs/bootstrap/bootstrap.min.css">
+      <link rel="stylesheet" href="libs/leaflet-easybutton-2.4.0/package/src/easy-button.css">
+      <link href="libs/css/style.css" rel="stylesheet" />
+   </head>
+   <body>
+      <div id="map">
+         <nav class="navbar sticky-top justify-content-center">
+            <div class="form-inline center-select">
+               <select id="countrySelect" class="form-control mr-sm-2">
+                  <option value="" selected>Select a country</option>
+               </select>
+            </div>
+         </nav>
       </div>
-      <div class="modal-body">
-        <table class="table table-striped">
-          <tr>
-
-            <td class="text-center">
-              <i class="fa-solid fa-globe fa-xl text-success"></i>
-            </td>
-
-            <td>
-              Continent
-            </td>
-
-            <td id="countryContinent"></td>
-
-          </tr>
-          <tr>
-            <td class="text-center">
-              <i class="fa-solid fa-city fa-xl text-success"></i>
-            </td>
-
-            <td>
-              Capital
-            </td>
-
-            <td id="countryCapital"></td>
-
-          </tr>
-          <tr>
-
-            <td class="text-center">
-              <i class="fa-solid fa-people-group fa-xl text-success"></i>
-            </td>
-
-            <td>
-              Population
-            </td>
-
-            <td id="countryPopulation"></td>
-
-          </tr>
-          <tr>
-
-            <td class="text-center">
-              <i class="fa-solid fa-language fa-xl text-success"></i>
-            </td>
-
-            <td>
-              Language(s)
-            </td>
-
-            <td id="countryLanguage"></td>
-
-          </tr>
-          <tr>
-
-            <td class="text-center">
-              <i class="fa-solid fa-coins fa-xl text-success"></i>
-            </td>
-
-            <td>
-              Currency
-            </td>
-
-            <td id="countryCurrency"></td>
-
-          </tr>
-          <tr>
-
-            <td class="text-center">
-              <i class="fa-solid fa-panorama fa-xl text-success"></i>
-            </td>
-
-            <td>
-              Area
-            </td>
-
-            <td id="countryArea"></td>
-
-          </tr>
-                    
-        </table>
+      <!-- COUNTRY INFORMATION MODAL  STARTS -->
+      <div id="countryInformation" class="modal" data-bs-backdrop="false" tabindex="-1">
+         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content shadow">
+               <div class="modal-header bg-dark bg-gradient text-white">
+                  <center>
+                     <h5 style="text-align:center;" class="modal-title" id="countryName"></h5>
+                  </center>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                  <table class="table table-striped">
+                     <tr>
+                        <td class="text-center">
+                           <i class="fa-solid fa-globe fa-xl text-success"></i>
+                        </td>
+                        <td>
+                           Continent
+                        </td>
+                        <td id="countryContinent"></td>
+                     </tr>
+                     <tr>
+                        <td class="text-center">
+                           <i class="fa-solid fa-city fa-xl text-success"></i>
+                        </td>
+                        <td>
+                           Capital
+                        </td>
+                        <td id="countryCapital"></td>
+                     </tr>
+                     <tr>
+                        <td class="text-center">
+                           <i class="fa-solid fa-people-group fa-xl text-success"></i>
+                        </td>
+                        <td>
+                           Population
+                        </td>
+                        <td id="countryPopulation"></td>
+                     </tr>
+                     <tr>
+                        <td class="text-center">
+                           <i class="fa-solid fa-language fa-xl text-success"></i>
+                        </td>
+                        <td>
+                           Language(s)
+                        </td>
+                        <td id="countryLanguage"></td>
+                     </tr>
+                     <tr>
+                        <td class="text-center">
+                           <i class="fa-solid fa-coins fa-xl text-success"></i>
+                        </td>
+                        <td>
+                           Currency
+                        </td>
+                        <td id="countryCurrency"></td>
+                     </tr>
+                     <tr>
+                        <td class="text-center">
+                           <i class="fa-solid fa-panorama fa-xl text-success"></i>
+                        </td>
+                        <td>
+                           Area
+                        </td>
+                        <td id="countryArea"></td>
+                     </tr>
+                  </table>
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
+               </div>
+            </div>
+         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
+      <!-- COUNTRY INFORMATION MODAL ENDS -->
+      <!-- HOLIDAY MODAL  STARTS -->
+      <div id="phInformation" class="modal" data-bs-backdrop="false" tabindex="-1">
+         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content shadow">
+               <div class="modal-header bg-dark bg-gradient text-white">
+                  <center>
+                     <h5 style="text-align:center;" class="modal-title" id="holidayTitle"></h5>
+                  </center>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                  <div id="tableholiday"></div>
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
+               </div>
+            </div>
+         </div>
       </div>
-    </div>
-  </div>
-</div>
-<!-- COUNTRY INFORMATION MODAL ENDS -->
-
-
-
-
-
-
-
-
-<!-- TIMEZONE INFORMATION MODAL  STARTS -->
-<div id="timezoneInformation" class="modal" data-bs-backdrop="false" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content shadow">
-      <div class="modal-header bg-dark bg-gradient text-white">
-        <center><h5 style="text-align:center;" class="modal-title" id="timezoneTitle"></h5></center>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      <!-- HOLIDAY MODAL ENDS -->
+      <!-- WEATHER INFORMATION MODAL  STARTS -->
+      <div id="weatherInformation" class="modal" data-bs-backdrop="false" tabindex="-1">
+         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content shadow">
+               <div class="modal-header bg-dark bg-gradient text-white">
+                  <center>
+                     <h5 style="text-align:center;" class="modal-title" id="weatherTitle"></h5>
+                  </center>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                  <div class="row">
+                     <div class="col border m-2">
+                        <p class="fw-bold fs-5 mt-1">TODAY</p>
+                        <div class="row">
+                           <div class="col text-center m-3">
+                              <p id="todayConditions" class="fw-bold fs-6"></p>
+                           </div>
+                           <div class="col text-center">
+                              <img id="todayIcon" class="img-fluid mt-0" src="" alt="" title="">
+                           </div>
+                           <div class="col text-center">
+                              <p class="fw-bold fs-4 mb-0"><span id="todayMaxTemp">3</span><sup>o</sup><span class="tempMetric">c</span></p>
+                              <p class="fs-5 mt-0 text-secondary"><span id="todayMinTemp">-2</span><sup>o</sup><span class="tempMetric">c</span></p>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="row">
+                     <div class="col border m-2">
+                        <div class="row">
+                           <div class="col text-center">
+                              <p id="day1Date" class="fw-bold fs-6 mt-3"></p>
+                           </div>
+                        </div>
+                        <div class="row">
+                           <div class="col text-center">
+                              <p class="fw-bold fs-4 mb-0"><span id="day1MaxTemp"></span><sup>o</sup>c</p>
+                              <p class="fs-5 mt-0 text-secondary"><span id="day1MinTemp"></span><sup>o</sup>c</p>
+                           </div>
+                           <div class="col text-center">
+                              <img id="day1Icon" src="" alt="" title="">
+                           </div>
+                        </div>
+                     </div>
+                     <div class="col border m-2">
+                        <div class="row">
+                           <div class="col text-center">
+                              <p id="day2Date" class="fw-bold fs-6 mt-3">Fri 16th</p>
+                           </div>
+                        </div>
+                        <div class="row">
+                           <div class="col text-center">
+                              <p class="fw-bold fs-4 mb-0"><span id="day2MaxTemp"></span><sup>o</sup>c</p>
+                              <p class="fs-5 mt-0 text-secondary"><span id="day2MinTemp"></span><sup>o</sup>c</p>
+                           </div>
+                           <div class="col text-center">
+                              <img id="day2Icon" src="" alt="" title="">
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               <div class="modal-footer">
+                  <p class="fs-6 fw-light">Powered by <a href="https://openweathermap.org/" target="_blank" title="Free Weather API">OpenWeatherMap.Org</a></p>
+                  <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
+               </div>
+            </div>
+         </div>
       </div>
-      <div class="modal-body">
-        <table class="table table-striped">
-          <tr>
-
-            <td class="text-center">
-              <i class="fa-solid fa-globe fa-xl text-success"></i>
-            </td>
-
-            <td>
-              Timezone
-            </td>
-
-            <td id="tzId"></td>
-
-          </tr>
-          <tr>
-            <td class="text-center">
-              <i class="fa-solid fa-city fa-xl text-success"></i>
-            </td>
-
-            <td>
-              Sunrise
-            </td>
-
-            <td id="tzsunrise"></td>
-
-          </tr>
-          <tr>
-
-            <td class="text-center">
-              <i class="fa-solid fa-people-group fa-xl text-success"></i>
-            </td>
-
-            <td>
-              Sunset
-            </td>
-
-            <td id="tzsunset"></td>
-
-          </tr>
-          <tr>
-
-            <td class="text-center">
-              <i class="fa-solid fa-language fa-xl text-success"></i>
-            </td>
-
-            <td>
-              Current Time
-            </td>
-
-            <td id="tztime"></td>
-
-          </tr>
-          <tr>
-
-            <td class="text-center">
-              <i class="fa-solid fa-coins fa-xl text-success"></i>
-            </td>
-
-            <td>
-              GMT Offset
-            </td>
-
-            <td id="tzgmtoffset"></td>
-
-          </tr>
-          <tr>
-
-            <td class="text-center">
-              <i class="fa-solid fa-panorama fa-xl text-success"></i>
-            </td>
-
-            <td>
-              DST Offset
-            </td>
-
-            <td id="tzdstoffset"></td>
-
-          </tr>
-                    
-        </table>
+      <!-- WEATHER INFORMATION MODAL ENDS -->
+      <!-- NEWS INFORMATION MODAL  STARTS -->
+      <div id="newsInformation" class="modal" data-bs-backdrop="false" tabindex="-1">
+         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content shadow">
+               <div class="modal-header bg-dark bg-gradient text-white">
+                  <center>
+                     <h5 style="text-align:center;" class="modal-title" id="newsTitle"></h5>
+                  </center>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                  <div id="tablenews"></div>
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
+               </div>
+            </div>
+         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
+      <!-- NEWS INFORMATION MODAL ENDS -->
+      <!-- WIKI MODAL  STARTS -->
+      <div id="showWikipedia" class="modal" data-bs-backdrop="false" tabindex="-1">
+         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content shadow">
+               <div class="modal-header bg-dark bg-gradient text-white">
+                  <center>
+                     <h5 style="text-align:center;" class="modal-title" id="wikiTitle"></h5>
+                  </center>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                  <div id="tablewiki"></div>
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
+               </div>
+            </div>
+         </div>
       </div>
-    </div>
-  </div>
-</div>
-<!-- TIMEZONE INFORMATION MODAL ENDS -->
-
-
-<!-- WEATHER INFORMATION MODAL  STARTS -->
-<div id="weatherInformation" class="modal" data-bs-backdrop="false" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content shadow">
-      <div class="modal-header bg-dark bg-gradient text-white">
-        <center><h5 style="text-align:center;" class="modal-title" id="weatherTitle"></h5></center>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      <!-- WIKI MODAL ENDS -->
+      <!--  CURRENCY MODAL  STARTS -->
+      <div id="currencyInformation" class="modal" data-bs-backdrop="false" tabindex="-1">
+         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content shadow">
+               <div class="modal-header bg-dark bg-gradient text-white">
+                  <center>
+                     <h5 style="text-align:center;" class="modal-title" id="curTitle"></h5>
+                  </center>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                  <form>
+                     <div class="form-floating mb-3">
+                        <input id="fromAmount" type="number" class="form-control" value="1" min="1" step="1">
+                        <label >From USD</label>
+                     </div>
+                     <div class="form-floating mb-3">
+                        <select id="exchangeRate" class="form-select">
+                        </select>
+                        <label for="exchangeRate">Convert to</label>
+                     </div>
+                     <div class="form-floating">
+                        <input id="toAmount" type="text" class="form-control" disabled>
+                        <label for="toAmount">Result</label>
+                     </div>
+                  </form>
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
+               </div>
+            </div>
+         </div>
       </div>
-      <div class="modal-body">
-        <div id="tableContainer"></div>
+      <!--  CURRENCY MODAL ENDS -->
+      <div id="loadingIndicator" style="display: none;">
+         <img src="libs/images/loading.gif" height="70px" width="70px" alt="Loading..." />
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- WEATHER INFORMATION MODAL ENDS -->
-
-
-
-<!-- NEWS INFORMATION MODAL  STARTS -->
-<div id="newsInformation" class="modal" data-bs-backdrop="false" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content shadow">
-      <div class="modal-header bg-dark bg-gradient text-white">
-        <center><h5 style="text-align:center;" class="modal-title" id="newsTitle"></h5></center>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div id="tablenews"></div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- NEWS INFORMATION MODAL ENDS -->
-
-<!-- WIKI MODAL  STARTS -->
-<div id="showWikipedia" class="modal" data-bs-backdrop="false" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content shadow">
-      <div class="modal-header bg-dark bg-gradient text-white">
-        <center><h5 style="text-align:center;" class="modal-title" id="wikiTitle"></h5></center>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div id="tablewiki"></div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- WIKI MODAL ENDS -->
-
-
-<!--  CURRENCY MODAL  STARTS -->
-<div id="currencyInformation" class="modal" data-bs-backdrop="false" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content shadow">
-      <div class="modal-header bg-dark bg-gradient text-white">
-        <center><h5 style="text-align:center;" class="modal-title" id="curTitle"></h5></center>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-          <div class="modal-body">
-             <div id="listCurrency"></div> 
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">Close</button>
-          </div>
-    </div>
-  </div>
-</div>
-<!--  CURRENCY MODAL ENDS -->
-
-
-<div id="loadingIndicator" style="display: none;">
-    <img src="libs/images/loading.gif" height="70px" width="70px" alt="Loading..." />
-</div>
-	
-</body>
+   </body>
 </html>
 
-		
-			
 <!-- Javascript Library-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.2/jquery.min.js"></script>
-
-<!-- Notification Popup-->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.js"></script>
-
 <!-- Bootstrap-->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Map Markers and Buttons-->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-extra-markers/1.2.1/js/leaflet.extra-markers.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.js"></script>
-
+<script src="libs/bootstrap/bootstrap.min.js"></script>
+<script src="libs/bootstrap/bootstrap.bundle.min.js"></script>
+<!-- Map Markers, Leaflets and Buttons-->
+<script src="libs/leaflet-1.9.4/package/dist/leaflet.js"></script>
+<script src="libs/leaflet-easybutton-2.4.0/package/src/easy-button.js"></script>
+<script src="libs/leaflet-extra-markers-1.2.2/package/dist/js/leaflet.extra-markers.js"></script>
+<script src="libs/leaflet.markercluster-1.5.3/package/dist/leaflet.markercluster.js"></script>
+<script src="libs/numeraljs-1.5.6/package/min/numeral.min.js"></script>
 <!-- My Scripts-->
 <script type="text/javascript" src="libs/js/main.js"></script>

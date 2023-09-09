@@ -3,7 +3,7 @@
     error_reporting(E_ALL);
 
     $executionTimeStart = microtime(true);
-    $apiKey = ""; // Put API key 
+    $apiKey = ""; 
     $apiUrl = 'http://api.geonames.org/countryInfoJSON?country=' . $_REQUEST['country'] . '&username=' . $apiKey;
 
     $curlHandle = curl_init();
