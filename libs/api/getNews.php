@@ -4,8 +4,8 @@
 	error_reporting(E_ALL);
 
 	$executionStartTime = microtime(true);
-	$apiKey = ""; //Put API key
-	$url='https://newsapi.org/v2/top-headlines?country=' . $_REQUEST['country'] . '&apiKey=' . $apiKey;
+	$apiKey = "";
+	$url='https://newsdata.io/api/1/news?country=' . $_REQUEST['country'] . '&apikey=' . $apiKey;
 
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

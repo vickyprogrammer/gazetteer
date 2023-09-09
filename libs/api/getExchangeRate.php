@@ -1,12 +1,11 @@
 <?php
-
 	ini_set('display_errors', 'On');
 	error_reporting(E_ALL);
 
 	$executionStartTime = microtime(true);
     $apiKey = "";
     $reqcurrency = $_GET['country'];
-	$url='https://openexchangerates.org/api/latest.json?app_id=' . $apiKey. '&symbols=' . $reqcurrency . ',GBP,EUR,AED,CAD,JPY';
+	$url='https://openexchangerates.org/api/latest.json?app_id=' . $apiKey. '&base=USD&show_alternative=1&prettyprint=1';
 
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

@@ -3,13 +3,13 @@ var geoselection;
 let cityData; // Declare a variable to store the city data
 let airportData; // Declare a variable to store the airports data
 let universityData; // Declare a variable to store the university data
-let refugeeData; // Declare a variable to store the refugee camp data
+let mountainData; // Declare a variable to store the refugee camp data
 let markers = []; // Array to store markers
 let selectedLatitude;
 let selectedLongitude;
 let selectedCountry;
 let selectedOption;
-var selectedOption3;
+var selectedOption3 = "";
 
 var airportLayer,cityLayer,universityLayer,refugeeLayer;
 // SET GLOBAL VARIABLES END
@@ -37,24 +37,9 @@ var map = L.map("map", {
 });
 
 
-cityLayer = L.markerClusterGroup();
-airportLayer = L.markerClusterGroup();
-universityLayer = L.markerClusterGroup();
-refugeeLayer = L.markerClusterGroup();
-
-var overlayMaps = {
-        Airports: airportLayer,
-        Cities: cityLayer,
-        Universities: universityLayer,
-        RefugeeCamp: refugeeLayer
-    };
-    
-
-var layerControl = L.control.layers(basemaps,overlayMaps).addTo(map);
-
 var myStyle = {
-    color: "#ff7800",
-    weight: 2,
+    color: "#0043FF",
+    weight: 4,
     opacity: 0.65,
 };
 
@@ -73,39 +58,27 @@ countrySelect.addEventListener("change", function() {
 loadingIndicator.style.display = "block"; // Show loading indicator
     selectedOption = countrySelect.value;
     selectedCountry = countrySelect.options[countrySelect.selectedIndex].text;
-    console.log("Selected Country Text:", selectedCountry);
-    console.log("Selected Country Value:", selectedOption);
 
     //Remove Borders and Markers on Select
     geoselection.remove();
-    removeMarkers();
-    removeMarkerCity();
-    removeMarkerAirport();
-    removeMarkerUniversity();
-    removeMarkerRefugee();
-        
+    airports.clearLayers();
+    cities.clearLayers();
+    universities.clearLayers();
+    mountains.clearLayers();
     //Get Borders on Select
     getCountryBorders(selectedOption);
-    getCountryCurrency(selectedOption3);
+    getCountryInfo(selectedOption);
+    
     //Load Markers on Select
     getCountryCities(selectedOption);
     getCountryAirports(selectedOption);
     getCountryUniversities(selectedOption);
-    getCountryRefugeeC(selectedOption);
+    getCountryMountains(selectedOption);
    
 });
 
 
 // ******************************** COUNTRY LIST AND BORDERS START ************************************
-//Populate from Function
-function populateCountrySelect(data) {
-    for (const entry of data) {
-        const option = document.createElement("option");
-        option.value = entry.countryCode;
-        option.textContent = entry.countryName;
-        countrySelect.appendChild(option);
-    }
-}
 
 const xhrNew = new XMLHttpRequest();
 xhrNew.onreadystatechange = function() {
@@ -113,7 +86,13 @@ xhrNew.onreadystatechange = function() {
         if (xhrNew.status === 200) {
 			loadingIndicator.style.display = "block"; // Show loading indicator
             const response = JSON.parse(xhrNew.responseText);
-            populateCountrySelect(response.data);
+           // const entry = ;
+            for (const entry of response.data) {
+            const option = document.createElement("option");
+            option.value = entry.countryCode;
+            option.textContent = entry.countryName;
+            countrySelect.appendChild(option);
+    }
             updateSelectedCountry();
         } else {
             console.error("Error fetching data");
@@ -125,9 +104,12 @@ xhrNew.open("GET", "libs/api/getRESTCountryInfo.php", true);
 xhrNew.send();
 
 
-//Update Country Function
+
+
+
+// Update Country Function
 function updateSelectedCountry() {
-    navigator.geolocation.getCurrentPosition(function(position) {
+    navigator.geolocation.getCurrentPosition(function (position) {
         const latitude = position.coords.latitude;
         const longitude = position.coords.longitude;
 
@@ -136,12 +118,12 @@ function updateSelectedCountry() {
 
         // Configure the AJAX request
         xhr.open("GET", apiUrl, true);
-        var currentCountryCode;
+
         // Set up a callback function to handle the response
-        xhr.onreadystatechange = function() {
+        xhr.onreadystatechange = function () {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 if (xhr.status === 200) {
-					loadingIndicator.style.display = "block"; // Show loading indicator
+                    loadingIndicator.style.display = "block"; // Show loading indicator
                     // Parse the JSON response
                     var response = JSON.parse(xhr.responseText);
 
@@ -151,19 +133,31 @@ function updateSelectedCountry() {
                         response.data
                     ) {
                         var currentData = response.data;
+                        const countrySelect = document.getElementById("countrySelect"); // Assuming you have an element with id "countrySelect"
 
-                        const defaultOption = countrySelect.querySelector('option[selected]');
-                        defaultOption.textContent = currentData.countryName; // Use backticks
-                        defaultOption.value = currentData.countryCode;
-                        selectedOption = defaultOption.value;
-                        selectedCountry = defaultOption.textContent;
+                        // Clear the previous selection
+                        const previousSelectedOption = countrySelect.querySelector('option[selected]');
+                        if (previousSelectedOption) {
+                            previousSelectedOption.removeAttribute('selected');
+                        }
+
+                        // Set the new option as selected
+                        const newOption = countrySelect.querySelector('option[value="' + currentData.countryCode + '"]');
+                        if (newOption) {
+                            newOption.setAttribute('selected', 'selected');
+                        }
+
+                        selectedOption = currentData.countryCode;
+                        selectedCountry = currentData.countryName;
                         getCountryBorders(selectedOption);
-                        //MARKERS
+                        getCountryInfo(selectedOption);
+
+                        // MARKERS
                         getCountryCities(selectedOption);
                         getCountryAirports(selectedOption);
                         getCountryUniversities(selectedOption);
-                        getCountryRefugeeC(selectedOption);
-                        //getCountryCurrency("NGN");
+                        getCountryMountains(selectedOption);
+                        
                     } else {
                         console.log(
                             "No information available for the specified country."
@@ -176,9 +170,10 @@ function updateSelectedCountry() {
         };
 
         xhr.send();
-
     });
 }
+
+
 
  
 //Borders Function
@@ -186,7 +181,6 @@ function getCountryBorders(country) {
     var xhr = new XMLHttpRequest();
     var url = "libs/api/getCoordinates.php";
     var params = "country=" + country;
-
     xhr.open("GET", url + "?" + params, true);
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     xhr.onreadystatechange = function() {
@@ -194,7 +188,7 @@ function getCountryBorders(country) {
             if (xhr.status === 200) {
 				loadingIndicator.style.display = "block"; // Show loading indicator
                 var result = JSON.parse(xhr.responseText);
-                if (result.data.name === "ok") {
+                if (result.data.name === "ok" && result.data.api1_data[0] !== undefined) {
                     selectedOption3 = result.data.api1_data[0].iso_a3;
                     var coordinateData = result.data.api1_data[0].geometry;
                     selectedLatitude = result.data.api2_data.lat;
@@ -203,11 +197,13 @@ function getCountryBorders(country) {
                         style: myStyle,
                     }).addTo(map);
                     map.fitBounds(geoselection.getBounds());
+                } else {
+                    alert("No borders available for the specified country. Please check back soon..");
                 }
             } else {
-                console.log(JSON.stringify(xhr));
-                console.log(JSON.stringify(xhr.statusText));
-                console.log(JSON.stringify(xhr.status));
+               // console.log(JSON.stringify(xhr));
+               // console.log(JSON.stringify(xhr.statusText));
+               // console.log(JSON.stringify(xhr.status));
             }
         }
     };
@@ -220,7 +216,7 @@ function getCountryBorders(country) {
 // ******************************** GET MODAL INFORMATION FUNCTIONS START ************************************
 
 //Get Country Information Modal
-
+var currencyfetch;
 function getCountryInfo(country) {
     var apiUrl = "libs/api/getCountryInfo.php";
 
@@ -248,8 +244,10 @@ function getCountryInfo(country) {
                     response.data.geonames &&
                     response.data.geonames.length > 0
                 ) {
+                    
                     var countryInfo = response.data.geonames[0];
-
+                    var population = countryInfo.population;
+                    currencyfetch = countryInfo.currencyCode;
                     document.getElementById("countryName").textContent =
                         countryInfo.countryName + " | Country Information";
                     document.getElementById("countryContinent").textContent =
@@ -257,13 +255,13 @@ function getCountryInfo(country) {
                     document.getElementById("countryCapital").textContent =
                         countryInfo.capital;
                     document.getElementById("countryPopulation").textContent =
-                        countryInfo.population;
+                        formatNumberWithCommas(population);
                     document.getElementById("countryLanguage").textContent =
                         countryInfo.languages;
                     document.getElementById("countryCurrency").textContent =
                         countryInfo.currencyCode;
                     document.getElementById("countryArea").textContent =
-                        countryInfo.areaInSqKm;
+                        formatNumberWithCommas(countryInfo.areaInSqKm)+"sqm";
                 } else {
                     console.log(
                         "No information available for the specified country."
@@ -279,6 +277,10 @@ function getCountryInfo(country) {
     xhr.send();
 }
 
+//Function to format numbers
+function formatNumberWithCommas(number) {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 
 
 //Get Timezone Information Modal
@@ -370,55 +372,35 @@ function getCountryWeather(lat, lng) {
                     var weatherInfo = response.data.daily;
                     document.getElementById("weatherTitle").innerHTML = selectedCountry +
                         " | Weather Information";
-                    // Loop through the daily weather data and create a table
-                    var tableHtml =
-                        "<table class='table table-striped' ><thead><tr><th>Date</th><th>Min </th><th>Max</th><th> </th></tr></thead><tbody>";
+                        var d = response.data;
+        
+                       // $('#weatherModalLabel').html(d.location + ", " + d.country);
+                        
+                        $('#todayConditions').html(d.daily[0].weather[0].main);
+                        $('#todayIcon').attr("src", 'https://openweathermap.org/img/wn/' +
+                            d.daily[0].weather[0].icon + '@2x.png');
+                        $('#todayMaxTemp').html(kelvinToCelsius(d.daily[0].temp.max));
+                        $('#todayMinTemp').html(kelvinToCelsius(d.daily[0].temp.min));
 
-                    for (var i = 0; i < weatherInfo.length; i++) {
-                        var dailyWeather = weatherInfo[i];
-                        var currentDate = new Date();
-                        var currentDay = currentDate.getDate();
-
-                        var displayDate = new Date(dailyWeather.dt * 1000);
-                        var displayDay = displayDate.getDate();
-
-                        var dateText = "";
-                        if (displayDay === currentDay) {
-                            dateText = "Today";
-                        } else if (displayDay === currentDay + 1) {
-                            dateText = "Tomorrow";
-                        } else {
-                            dateText = displayDate.toDateString();
-                        }
-                        tableHtml += "<tr>";
-                        tableHtml += "<td>" + dateText + "</td>";
-                        tableHtml +=
-                            "<td>" +
-                            Math.round(kelvinToCelsius(dailyWeather.temp.min)) +
-                            " 째C</td>";
-                        tableHtml +=
-                            "<td>" +
-                            Math.round(kelvinToCelsius(dailyWeather.temp.max)) +
-                            " 째C</td>";
-                        tableHtml +=
-                            '<td><img src="http://openweathermap.org/img/w/' +
-                            dailyWeather.weather[0].icon +
-                            '.png" alt="' +
-                            dailyWeather.weather[0].description +
-                            '"></td>';
-                        tableHtml += "</tr>";
-                    }
-
-                    tableHtml += "</tbody></table>";
-                    // Function to convert Kelvin to Celsius
+                        $('#day1Date').text(convertUnixDate(d.daily[1].dt));
+                        $('#day1Icon').attr("src", 'https://openweathermap.org/img/wn/' +
+                            d.daily[1].weather[0].icon + '.png');
+                        $('#day1MinTemp').text(kelvinToCelsius(d.daily[1].temp.min));
+                        $('#day1MaxTemp').text(kelvinToCelsius(d.daily[1].temp.max));
+                        
+                        $('#day2Date').text(convertUnixDate(d.daily[2].dt));
+                        $('#day2Icon').attr("src", 'https://openweathermap.org/img/wn/' +
+                            d.daily[2].weather[0].icon + '.png');
+                        $('#day2MinTemp').text(kelvinToCelsius(d.daily[2].temp.min));
+                        $('#day2MaxTemp').text(kelvinToCelsius(d.daily[2].temp.max));
+                        
+                        $('#lastUpdated').text("Source: Openweather.org");
+                        
+                         // Function to convert Kelvin to Celsius
                     function kelvinToCelsius(kelvin) {
-                        return (kelvin - 273.15).toFixed(2);
+                        return (kelvin - 273.15).toFixed();
                     }
-                    // Insert the table into the designated HTML element
-                    var tableContainer = document.getElementById(
-                        "tableContainer"
-                    );
-                    tableContainer.innerHTML = tableHtml;
+                   
                 } else {
                     console.log(
                         "No information available for the specified country weather."
@@ -432,6 +414,7 @@ function getCountryWeather(lat, lng) {
     // Send the AJAX request
     xhr.send();
 }
+
 
 
 //Get Country News Modal
@@ -457,28 +440,37 @@ function getCountryNews(country) {
                         " | Top News";
                 // Check if the response contains data
                 if (response && response.data) {
-                    var newsInfo = response.data.articles;
+                    var newsInfo = response.data.results;
 
                     // Loop through the news articles and create a table
-                    var tableHtml = "<table><tbody>";
-
+                    var tableHtml = "";
                     for (var i = 0; i < newsInfo.length; i++) {
                         var newsArticle = newsInfo[i];
-                        tableHtml += "<tr>";
-                        tableHtml +=
-                            '<td><a href="' +
-                            newsArticle.url +
-                            '" target="_blank">' +
-                            newsArticle.title +
-                            "</a><br>";
-                        tableHtml +=
-                            '<span style="color: grey;" ><em>' +
-                            formatDate(newsArticle.publishedAt) +
-                            "</em></span><hr></td>";
-                        tableHtml += "</tr>";
+                       if(newsArticle.image_url===null){
+                          var imagesurl = "libs/images/noimage.jpeg";
+                       } else{
+                          var imagesurlunclean = newsArticle.image_url;
+                           imagesurl = imagesurlunclean.replace(/\/$/, '');
+                           
+                       }
+                       tableHtml += '<table class="table table-borderless">';
+                       tableHtml +=   '<tr>';
+                       tableHtml +=     '<td rowspan="2" width="50%">';
+                       tableHtml +=      '<img class="img-fluid rounded" src="' + imagesurl + '" alt="" title="">';
+                       tableHtml +=    '</td>';
+                       tableHtml +=  '<td>';
+                       tableHtml +=       '<a href="' + newsArticle.link + '" target="_blank">' + newsArticle.title + '</a>';
+                       tableHtml +=    '</td>';
+                       tableHtml +=   '</tr>';
+                       tableHtml +=   '<tr>';          
+                       tableHtml +=     '<td class="align-bottom pb-0">';
+                       tableHtml +=      '<p class="fw-light fs-6 mb-1">' + newsArticle.source_id + '</p>';
+                       tableHtml +=     '</td>';          
+                       tableHtml +=  '</tr>';
+                       tableHtml +=  '</table>'
+                       tableHtml +=  '<hr>';
                     }
 
-                    tableHtml += "</tbody></table>";
 
                     // Insert the table into the designated HTML element
                     var tableContainer = document.getElementById("tablenews");
@@ -569,8 +561,11 @@ function getCountryWiki(country) {
 }
 
 
-function getCountryCurrency(country) {
-    var apiUrl = "libs/api/getExchangeRate.php";
+
+
+//Get Public Holiday Information Modal
+function getCountryHoliday(country) {
+    var apiUrl = "libs/api/getPublicHolidays.php";
 
     // Create a new XMLHttpRequest object
     var xhr = new XMLHttpRequest();
@@ -584,37 +579,77 @@ function getCountryCurrency(country) {
     xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.DONE) {
             if (xhr.status === 200) {
-                loadingIndicator.style.display = "block"; // Show loading indicator
+				loadingIndicator.style.display = "block"; // Show loading indicator
                 // Parse the JSON response
+                var response = JSON.parse(xhr.responseText);
+
+                // Check if the response contains data
+                if (
+                    response &&
+                    response.data &&
+                    response.data.length > 0
+                ) {
+                    var holidayInfo = response.data;
+                    document.getElementById("holidayTitle").innerHTML = selectedCountry +
+                        " | Public Holidays";
+                    // Loop through the news articles and create a table
+                    var tableHtml = "<table class='table table-striped'><tbody>";
+
+                    for (var i = 0; i < holidayInfo.length; i++) {
+                        var holidayContent = holidayInfo[i];
+                        tableHtml += "<tr>";
+                        tableHtml += "<td>" + formatDate(holidayContent.date) + "</td>";
+                        tableHtml += "<td>" + holidayContent.name + "</td>";
+                        tableHtml += "</tr>";
+                    }
+
+                    tableHtml += "</tbody></table>";
+
+                    // Insert the table into the designated HTML element
+                    var tableContainer = document.getElementById("tableholiday");
+                    tableContainer.innerHTML = tableHtml;
+                } else {
+                    console.log("No public holiday available for the specified country.");
+                }
+            } else {
+                console.log("Error fetching data. Status code:", xhr.status);
+            }
+        }
+    };
+    // Send the AJAX request
+    xhr.send();
+}
+
+// Function for Exchange Rates
+function getCountryCurrency(countrysel) {
+    getCountryInfo(selectedOption);
+    var apiUrl = "libs/api/getExchangeRate.php";
+    var xhr = new XMLHttpRequest();
+    var url = apiUrl + "?country=" + encodeURIComponent(countrysel);
+    xhr.open("GET", url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                loadingIndicator.style.display = "block"; // Show loading indicator
                 var response = JSON.parse(xhr.responseText);
                 document.getElementById("curTitle").innerHTML = selectedCountry +
                         " | Currency Exchange";
-                // Check if the response contains data
+                const exchangeRate = document.getElementById("exchangeRate");
                 if (response && response.data && response.data.rates) {
-                    var currencyInfo = response.data.rates;
-                    
-                    // Create an empty string to store the HTML content
-                      var listHtml = "<ul class='list-group w-60 mx-auto'>";
-                    // Add the base currency at the top
-                    listHtml += "<li class='list-group-item d-flex justify-content-between bg-success text-white'><strong>BASE CURRENCY: " + response.data.base + 
-                    " <span class='text-right pr-2'>"  + "</span></strong></li><br><br>";
-                    
-                    listHtml += "<li class='list-group-item d-flex text-center bg-danger text-white'><strong>RATES</strong></li>";
-                    
-                    // Loop through the rates object to get currency name and value
-                    for (var currencyName in currencyInfo) {
-                        if (currencyInfo.hasOwnProperty(currencyName)) {
-                            var currencyValue = currencyInfo[currencyName];
-                            // Create a list item for each currency
-                            listHtml += "<li class='list-group-item d-flex justify-content-between'>" + currencyName + " <span class='text-right pr-2'>" + currencyValue.toFixed(2) + "</span></li>";
+                    const exchangeRates = response.data.rates;
+                     for (const currency in exchangeRates) {
+                          if (exchangeRates.hasOwnProperty(currency)) {
+                              const option = document.createElement("option");
+                                option.value = `${exchangeRates[currency]}`;
+                                option.textContent = `${currency}`;
+                                // Check if the currency is equal to country and set 'selected' attribute
+                            if (currency === currencyfetch) {
+                              option.selected = true;
+                            }
+                                exchangeRate.appendChild(option);
+                          }
                         }
-                    }
-
-                    listHtml += "</ul>";
-
-                    // Insert the table into the designated HTML element
-                    var listContainer = document.getElementById("listCurrency");
-                    listContainer.innerHTML = listHtml;
+                        calcResult();
                 } else {
                     console.log("No currency available for the specified country.");
                 }
@@ -623,11 +658,73 @@ function getCountryCurrency(country) {
             }
         }
     };
-
-    // Send the AJAX request
+   
     xhr.send();
 }
 
+
+      //============================================= OTHER FUNCTIONS USED=========================================================
+function convertUnixDate(unixdate){
+// Unix timestamp: 1694114040
+const unixTimestamp = unixdate;
+
+// Create a Date object from the Unix timestamp
+const date = new Date(unixTimestamp * 1000); // Multiply by 1000 to convert from seconds to milliseconds
+
+// Define arrays for the day names and month names
+const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+// Get the day of the week (0-6)
+const dayOfWeek = date.getUTCDay();
+
+// Get the day of the month (1-31)
+const dayOfMonth = date.getUTCDate();
+
+// Get the formatted day string, including "st", "nd", "rd", or "th" suffix
+function getDayWithSuffix(day) {
+  if (day >= 11 && day <= 13) {
+    return day + 'th';
+  }
+  switch (day % 10) {
+    case 1:
+      return day + 'st';
+    case 2:
+      return day + 'nd';
+    case 3:
+      return day + 'rd';
+    default:
+      return day + 'th';
+  }
+}
+
+// Format the date string
+const formattedDate = `${dayNames[dayOfWeek]} ${getDayWithSuffix(dayOfMonth)}`;
+return formattedDate;
+
+}
+
+
+
+$('#fromAmount').on('keyup', function () {
+  calcResult();
+})
+
+$('#fromAmount').on('change', function () {
+  calcResult();
+})
+
+$('#exchangeRate').on('change', function () {
+  calcResult();
+})
+
+$('#currencyInformation').on('show.bs.modal', function () {
+  calcResult();
+})
+
+
+function calcResult() {
+  $('#toAmount').val(numeral($('#fromAmount').val() * $('#exchangeRate').val()).format("0,0.00"));
+}
 
 
 
@@ -639,14 +736,6 @@ function getCountryCurrency(country) {
 
 
 // ************************************** MAP MARKERS FUNCTIONS START *************************************************
-
-// Remove existing markers from the map
-function removeMarkers() {
-    for (var i = 0; i < markers.length; i++) {
-        map.removeLayer(markers[i]);
-    }
-    markers = []; // Clear the markers array
-}
 
 
 //Get Map Markers for Cities
@@ -705,7 +794,7 @@ function getCountryAirports(country) {
     xhr.send();
 }
 
-//Get Map Markers for Refugee Universities
+//Get Map Markers for Universities
 function getCountryUniversities(country) {
     var xhr = new XMLHttpRequest();
     var url = "libs/api/markers/getMapUniversities.php";
@@ -734,10 +823,10 @@ function getCountryUniversities(country) {
 }
 
 
-//Get Map Markers for Refugee Camp
-function getCountryRefugeeC(country) {
+//Get Map Markers for Mountain
+function getCountryMountains(country) {
     var xhr = new XMLHttpRequest();
-    var url = "libs/api/markers/getMapRefugeeC.php";
+    var url = "libs/api/markers/getMapMountains.php";
     var params = "country=" + country;
 
     xhr.open("GET", url + "?" + params, true);
@@ -748,8 +837,8 @@ function getCountryRefugeeC(country) {
 				loadingIndicator.style.display = "block"; // Show loading indicator
                 var result = JSON.parse(xhr.responseText);
                 if (result.status.name === "ok") {
-                    refugeeData = result.data.geonames; // Store the city data
-                    addMarkersToClusterRefugee(refugeeData);
+                    mountainData = result.data.geonames; // Store the city data
+                    addMarkersToClusterMountain(mountainData);
                 }
             } else {
                 console.log(JSON.stringify(xhr));
@@ -781,7 +870,7 @@ L.easyButton({
         stateName: "unchecked",
         title: "Show Country Information",
         onClick: function(btn, map) {
-            getCountryInfo(selectedOption);
+            
             $("#countryInformation").modal("show");
 
             $(".close").click(function() {
@@ -792,21 +881,21 @@ L.easyButton({
 }).addTo(map);
 
 
-// Show Timezone Information Button
+// Show Public Holiday Information Button
 
 L.easyButton({
     position: "topleft",
-    id: "timezoneBtn",
+    id: "pbBtn",
     states: [{
-        icon: "fa-clock",
+        icon: "fa-calendar",
         stateName: "unchecked",
-        title: "Show Timezone Information",
+        title: "Show Public Holiday Information",
         onClick: function(btn, map) {
-            getCountryTimezone(selectedLatitude, selectedLongitude);
-            $("#timezoneInformation").modal("show");
+            getCountryHoliday(selectedOption);
+            $("#phInformation").modal("show");
 
             $(".close").click(function() {
-                $("#timezoneInformation").modal("hide");
+                $("#phInformation").modal("hide");
             });
         },
     }, ],
@@ -919,18 +1008,85 @@ L.easyButton({
 
 
 
-// ******************************************* MAP MARKERS END *************************************************
+// ******************************************* MAP MARKERS START *************************************************
+var airports = L.markerClusterGroup({
+      polygonOptions: {
+        fillColor: '#fff',
+        color: '#000',
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.5
+      }}).addTo(map);
+
+var cities = L.markerClusterGroup({
+      polygonOptions: {
+        fillColor: '#fff',
+        color: '#000',
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.5
+      }}).addTo(map);
+      
+var universities = L.markerClusterGroup({
+      polygonOptions: {
+        fillColor: '#fff',
+        color: '#000',
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.5
+      }}).addTo(map);
+      
+var mountains = L.markerClusterGroup({
+      polygonOptions: {
+        fillColor: '#fff',
+        color: '#000',
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.5
+      }}).addTo(map);
+
+var overlays = {
+  "Airports": airports,
+  "Cities": cities,
+  "Universities": universities,
+  "Mountains": mountains
+};
+
+var layerControl = L.control.layers(basemaps, overlays).addTo(map);
+
+var airportIcon = L.ExtraMarkers.icon({
+  prefix: 'fa',
+  icon: 'fa-plane',
+  iconColor: 'black',
+  markerColor: 'white',
+  shape: 'square'
+});
+
+var cityIcon = L.ExtraMarkers.icon({
+  prefix: 'fa',
+  icon: 'fa-city',
+  markerColor: 'green',
+  shape: 'square'
+});
+
+var universityIcon = L.ExtraMarkers.icon({
+  prefix: 'fa',
+  icon: 'fa-university',
+  markerColor: 'blue',
+  shape: 'square'
+});
+
+var mountainIcon = L.ExtraMarkers.icon({
+  prefix: 'fa',
+  icon: 'fa-mountain',
+  markerColor: 'red',
+  shape: 'square'
+});
+
+
 // City Markers with Cluster Group
-var markers_city = L.markerClusterGroup();
 // Function to add markers to the cluster group
 function addMarkersToClusterCity(cityData) {
-    var cityIcon = L.icon({
-        iconUrl: "libs/images/icons/city.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-    });
-
     if (cityData) {
         // Loop through city data and create markers
         for (var i = 0; i < cityData.length; i++) {
@@ -939,188 +1095,80 @@ function addMarkersToClusterCity(cityData) {
             var lng = parseFloat(city.lng);
             var population = city.population.toLocaleString();
             var cityName = city.name;
-            // Create a marker for each city
-            var marker = L.marker([lat, lng], {
-                icon: cityIcon,
-            });
-            marker.bindPopup(
-                cityName + "<br>Population: " + population
-            );
-            markers_city.addLayer(marker);
+
+             L.marker([lat, lng], {icon: cityIcon})
+            .bindTooltip("<div class='col text-center'><strong>" + cityName + "</strong><br><i>(" + population + ")</i></div>", {direction: 'top', sticky: true})
+            .addTo(cities);
         }
-        // Add the marker cluster group to the map
-        map.addLayer(markers_city);
-        // Initially, display the marker cluster group on the map
-        map.fitBounds(markers_city.getBounds());
+      
     }
 }
-// Add an 'add' event listener to the cityLayer
-cityLayer.on('add', function() {
-    // The code to run when the "Cities" layer is added to the map
-    addMarkersToClusterCity(cityData);
-});
-// Function to remove markers from the cluster group
-function removeMarkerCity() {
-    markers_city.clearLayers();
-}
-// Add a 'remove' event listener to the cityLayer
-cityLayer.on('remove', function() {
-    // The code to run when the "Cities" layer is removed from the map
-    removeMarkerCity();
-});
 
 
 
-// Airport Markers with Cluster Group
-var markers_airport = L.markerClusterGroup();
-// Function to add markers to the cluster group
+
 function addMarkersToClusterAirport(airportData) {
-    var airportIcon = L.icon({
-        iconUrl: "libs/images/icons/airport.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-    });
-    
-
-            
     if (airportData) {
         // Loop through city data and create markers
         for (var i = 0; i < airportData.length; i++) {
             var airport = airportData[i];
-                    var lat = parseFloat(airport.lat);
-                    var lng = parseFloat(airport.lng);
-                    var aiportName = airport.name;
-                    
-            // Create a marker for each city
-            var marker = L.marker([lat, lng], {
-                icon: airportIcon,
-            });
-            marker.bindPopup(aiportName);
-            markers_airport.addLayer(marker);
+            var lat = parseFloat(airport.lat);
+            var lng = parseFloat(airport.lng);
+            var aiportName = airport.name;
+            L.marker([lat, lng], {icon: airportIcon})
+            .bindTooltip(aiportName, {direction: 'top', sticky: true})
+            .addTo(airports);
+          
         }
-        // Add the marker cluster group to the map
-        map.addLayer(markers_airport);
-        // Initially, display the marker cluster group on the map
-        map.fitBounds(markers_airport.getBounds());
+      
     }
 }
-// Add an 'add' event listener to the cityLayer
-airportLayer.on('add', function() {
-    // The code to run when the "Cities" layer is added to the map
-    addMarkersToClusterAirport(airportData);
-});
-// Function to remove markers from the cluster group
-function removeMarkerAirport() {
-    markers_airport.clearLayers();
-}
-// Add a 'remove' event listener to the cityLayer
-airportLayer.on('remove', function() {
-    // The code to run when the "Cities" layer is removed from the map
-    removeMarkerAirport();
-});
+
 
 
 
 
 // University Markers with Cluster Group
-var markers_university = L.markerClusterGroup();
 // Function to add markers to the cluster group
 function addMarkersToClusterUniversity(universityData) {
-    var universityIcon = L.icon({
-        iconUrl: "libs/images/icons/university.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-    });
-    
-
     if (universityData) {
         // Loop through city data and create markers
         for (var i = 0; i < universityData.length; i++) {
             var university = universityData[i];
-                    var lat = parseFloat(university.lat);
-                    var lng = parseFloat(university.lng);
-                    var universityName = university.name;
-                    
-            // Create a marker for each city
-            var marker = L.marker([lat, lng], {
-                        icon: universityIcon,
-            });
-            marker.bindPopup(universityName);
-            markers_university.addLayer(marker);
+            var lat = parseFloat(university.lat);
+            var lng = parseFloat(university.lng);
+            var universityName = university.name;
+            L.marker([lat, lng], {icon: universityIcon})
+            .bindTooltip(universityName, {direction: 'top', sticky: true})
+            .addTo(universities);        
+          
         }
-        // Add the marker cluster group to the map
-        map.addLayer(markers_university);
-        // Initially, display the marker cluster group on the map
-        map.fitBounds(markers_university.getBounds());
+      
     }
 }
-// Add an 'add' event listener to the cityLayer
-universityLayer.on('add', function() {
-    // The code to run when the "Cities" layer is added to the map
-    addMarkersToClusterUniversity(universityData);
-});
-// Function to remove markers from the cluster group
-function removeMarkerUniversity() {
-    markers_university.clearLayers();
-}
-// Add a 'remove' event listener to the cityLayer
-universityLayer.on('remove', function() {
-    // The code to run when the "Cities" layer is removed from the map
-    removeMarkerUniversity();
-});
 
 
 
 
-// Refugee Camp Markers with Cluster Group
-var markers_refugee = L.markerClusterGroup();
+// Mountain Markers with Cluster Group
 // Function to add markers to the cluster group
-function addMarkersToClusterRefugee(refugeeData) {
-    var refugeeIcon = L.icon({
-        iconUrl: "libs/images/icons/charity.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-    });
-    
-
-    if (refugeeData) {
+function addMarkersToClusterMountain(mountainData) {
+    if (mountainData) {
         // Loop through city data and create markers
-        for (var i = 0; i < refugeeData.length; i++) {
-             var refugee = refugeeData[i];
-                    var lat = parseFloat(refugee.lat);
-                    var lng = parseFloat(refugee.lng);
-                    var refugeeName = refugee.name;
-                    
-            // Create a marker for each city
-            var marker = L.marker([lat, lng], {
-                        icon: refugeeIcon,
-            });
-            marker.bindPopup(refugeeName);
-            markers_refugee.addLayer(marker);
+        for (var i = 0; i < mountainData.length; i++) {
+            var mountain = mountainData[i];
+            var lat = parseFloat(mountain.lat);
+            var lng = parseFloat(mountain.lng);
+            var mountainName = mountain.name;
+            L.marker([lat, lng], {icon: mountainIcon})
+            .bindTooltip(mountainName, {direction: 'top', sticky: true})
+            .addTo(mountains);
         }
-        // Add the marker cluster group to the map
-        map.addLayer(markers_refugee);
-        // Initially, display the marker cluster group on the map
-        map.fitBounds(markers_refugee.getBounds());
     }
 }
-// Add an 'add' event listener to the cityLayer
-refugeeLayer.on('add', function() {
-    // The code to run when the "Cities" layer is added to the map
-    addMarkersToClusterRefugee(refugeeData);
-});
-// Function to remove markers from the cluster group
-function removeMarkerRefugee() {
-    markers_refugee.clearLayers();
-}
-// Add a 'remove' event listener to the cityLayer
-refugeeLayer.on('remove', function() {
-    // The code to run when the "" layer is removed from the map
-    removeMarkerRefugee();
-});
+
 
 
 // ******************************************* MAP MARKERS END *************************************************
+
+
