@@ -492,7 +492,15 @@ function getCountryNews(country) {
 // Function to format the date
 function formatDate(dateString) {
     var date = new Date(dateString);
-    return date.toDateString();
+
+// Get the day and month components
+var day = date.getDate();
+var month = date.toLocaleString('default', { month: 'short' });
+
+// Construct the formatted string
+var formattedDate = getDayWithSuffix(day) + ' ' + month;
+
+return formattedDate;
 }
 
 //Get Wikipedia Information Modal
@@ -577,6 +585,7 @@ function getCountryHoliday(country) {
 
     // Set up a callback function to handle the response
     xhr.onreadystatechange = function() {
+        var currentYear = new Date().getFullYear();
         if (xhr.readyState === XMLHttpRequest.DONE) {
             if (xhr.status === 200) {
 				loadingIndicator.style.display = "block"; // Show loading indicator
@@ -591,7 +600,7 @@ function getCountryHoliday(country) {
                 ) {
                     var holidayInfo = response.data;
                     document.getElementById("holidayTitle").innerHTML = selectedCountry +
-                        " | Public Holidays";
+                        " | Public Holidays - " + currentYear;
                     // Loop through the news articles and create a table
                     var tableHtml = "<table class='table table-striped'><tbody>";
 
@@ -680,6 +689,12 @@ const dayOfWeek = date.getUTCDay();
 // Get the day of the month (1-31)
 const dayOfMonth = date.getUTCDate();
 
+// Format the date string
+const formattedDate = `${dayNames[dayOfWeek]} ${getDayWithSuffix(dayOfMonth)}`;
+return formattedDate;
+
+}
+
 // Get the formatted day string, including "st", "nd", "rd", or "th" suffix
 function getDayWithSuffix(day) {
   if (day >= 11 && day <= 13) {
@@ -695,12 +710,6 @@ function getDayWithSuffix(day) {
     default:
       return day + 'th';
   }
-}
-
-// Format the date string
-const formattedDate = `${dayNames[dayOfWeek]} ${getDayWithSuffix(dayOfMonth)}`;
-return formattedDate;
-
 }
 
 
@@ -1170,5 +1179,3 @@ function addMarkersToClusterMountain(mountainData) {
 
 
 // ******************************************* MAP MARKERS END *************************************************
-
-
